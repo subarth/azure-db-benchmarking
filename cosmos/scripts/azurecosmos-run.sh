@@ -78,6 +78,10 @@ if [ ! -z "$managedIdentityClientId" ]; then
    sed -i "s/^[#]*\s*azurecosmos.managedIdentityClientId\ =.*/azurecosmos.managedIdentityClientId\ =\ $managedIdentityClientId/" azurecosmos.properties
 fi
 
+if [ ! -z "$managedIdentityName" ]; then
+   sed -i "s/^[#]*\s*azurecosmos.managedIdentityName\ =.*/azurecosmos.managedIdentityName\ =\ $managedIdentityName/" azurecosmos.properties
+fi
+
 if [ ! -z "$appInsightConnectionString" ]; then
    sed -i "s|^[#]*\s*azurecosmos.appInsightConnectionString\ =.*|azurecosmos.appInsightConnectionString\ =\ $appInsightConnectionString|" azurecosmos.properties
 fi

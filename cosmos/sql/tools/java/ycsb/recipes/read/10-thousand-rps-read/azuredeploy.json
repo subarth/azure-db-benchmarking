@@ -109,7 +109,7 @@
         },
         "ycsbOperationCount": {
             "type": "int",
-            "defaultValue": 36000000,
+            "defaultValue": 0,
             "metadata": {
                 "description": "Specifies the total number of operations each client perfoms"
             }
@@ -130,7 +130,7 @@
         },
         "ycsbGitHubBranchName": {
             "type": "string",
-            "defaultValue": "main",
+            "defaultValue": "users/dpatnekar/cdbaadauthsupport",
             "metadata": {
                 "description": "Specifies the GitHub branch for YCSB source code repository"
             }
@@ -144,7 +144,7 @@
         },
         "benchmarkingToolsBranchName": {
             "type": "string",
-            "defaultValue": "main",
+            "defaultValue": "users/dpatnekar/cdbaadauthsupport",
             "metadata": {
                 "description": "Specifies the GitHub branch for benchmakring framwork code repositor"
             }
@@ -182,6 +182,18 @@
             "defaultValue": "10",
             "metadata": {
                 "description": "Specifies field count in the item"
+            }
+        },
+        "managedIdentityName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the name of the User Assigned Managed identity to use with Cosmos DB account."
+            }
+        },
+        "managedIdentityClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the client id of the User Assigned Managed identity to use with Cosmos DB account."
             }
         }
     },
@@ -283,6 +295,12 @@
                     },
                     "fieldcount": {
                         "value": "[parameters('fieldcount')]"
+                    },
+                    "managedIdentityName": {
+                        "value": "[parameters('managedIdentityName')]"
+                    },
+                    "managedIdentityClientId": {
+                        "value": "[parameters('managedIdentityClientId')]"
                     }
                 }
             }
