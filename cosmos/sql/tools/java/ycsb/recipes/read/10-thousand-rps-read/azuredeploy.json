@@ -130,7 +130,7 @@
         },
         "ycsbGitHubBranchName": {
             "type": "string",
-            "defaultValue": "users/dpatnekar/cdbaadauthsupport",
+            "defaultValue": "users/dpatnekar/cdbserviceprincipal",
             "metadata": {
                 "description": "Specifies the GitHub branch for YCSB source code repository"
             }
@@ -144,7 +144,7 @@
         },
         "benchmarkingToolsBranchName": {
             "type": "string",
-            "defaultValue": "users/dpatnekar/cdbaadauthsupport",
+            "defaultValue": "users/dpatnekar/cdbserviceprincipal",
             "metadata": {
                 "description": "Specifies the GitHub branch for benchmakring framwork code repositor"
             }
