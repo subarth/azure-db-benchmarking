@@ -102,14 +102,14 @@
         },
         "targetOperationsPerSecond": {
             "type": "int",
-            "defaultValue": 10000,
+            "defaultValue": 10,
             "metadata": {
                 "description": "Specifies the maximum number of operations each client pefroms per second"
             }
         },
         "ycsbOperationCount": {
             "type": "int",
-            "defaultValue": 0,
+            "defaultValue": 259200000,
             "metadata": {
                 "description": "Specifies the total number of operations each client perfoms"
             }
@@ -130,7 +130,7 @@
         },
         "ycsbGitHubBranchName": {
             "type": "string",
-            "defaultValue": "users/dpatnekar/cdbserviceprincipal",
+            "defaultValue": "users/dpatnekar/upgradetoaad",
             "metadata": {
                 "description": "Specifies the GitHub branch for YCSB source code repository"
             }
