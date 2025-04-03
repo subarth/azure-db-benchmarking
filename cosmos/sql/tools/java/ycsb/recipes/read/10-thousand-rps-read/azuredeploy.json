@@ -183,6 +183,25 @@
             "metadata": {
                 "description": "Specifies field count in the item"
             }
+        },
+        "managedIdentityName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the name of the User Assigned Managed identity to use with Cosmos DB account."
+            }
+        },
+        "managedIdentityClientId": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the client id of the User Assigned Managed identity to use with Cosmos DB account."
+            }
+        },
+        "useGateway": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Specifies if the gateway connectivity mode should be used. The default value 'false' indicates direct connectivity mode"
+            }
         }
     },
     "variables": {
@@ -283,6 +302,15 @@
                     },
                     "fieldcount": {
                         "value": "[parameters('fieldcount')]"
+                    },
+                    "managedIdentityName": {
+                        "value": "[parameters('managedIdentityName')]"
+                    },
+                    "managedIdentityClientId": {
+                        "value": "[parameters('managedIdentityClientId')]"
+                    },
+                    "useGateway": {
+                        "value": "[parameters('useGateway')]"
                     }
                 }
             }
