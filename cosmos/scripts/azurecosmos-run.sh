@@ -86,6 +86,10 @@ if [ ! -z "$databaseName" ]; then
    sed -i "s/^[#]*\s*azurecosmos.$databaseName\ =.*/azurecosmos.databaseName\ =\ $databaseName/" azurecosmos.properties
 fi
 
+if [ ! -z "$ycsbDatabaseName" ]; then
+   sed -i "s/^[#]*\s*azurecosmos.$ycsbDatabaseName\ =.*/azurecosmos.ycsbDatabaseName\ =\ $ycsbDatabaseName/" azurecosmos.properties
+fi
+
 if [ ! -z "$useUpsert" ]; then
    sed -i "s/^[#]*\s*azurecosmos.useUpsert\ =.*/azurecosmos.useUpsert\ =\ $useUpsert/" azurecosmos.properties
 fi
