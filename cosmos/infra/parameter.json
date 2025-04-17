@@ -37,6 +37,9 @@
     },
     "writeOnlyOperation": {
       "value": false
+    },
+    "ycsbDatabaseName": {
+      "value": "ycsb"
     }
   }
 }
