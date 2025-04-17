@@ -54,6 +54,7 @@ echo "##########DELAY_IN_MS###########: $DELAY_IN_MS"
 echo "##########USER_AGENT###########: $USER_AGENT"
 echo "##########CONSISTENCY_LEVEL###########: $CONSISTENCY_LEVEL"
 echo "###########APP_INSIGHT_CONN_STR########: $APP_INSIGHT_CONN_STR"
+echo "###########YCSB_DATABASE_NAME########: $YCSB_DATABASE_NAME"
 
 # The index of the record to start at during the Load
 insertstart=$((YCSB_RECORD_COUNT * (MACHINE_INDEX - 1)))
