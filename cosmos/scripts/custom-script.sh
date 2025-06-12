@@ -52,6 +52,10 @@ echo "##########DELAY_IN_MS###########: $DELAY_IN_MS"
 echo "##########USER_AGENT###########: $USER_AGENT"
 echo "##########CONSISTENCY_LEVEL###########: $CONSISTENCY_LEVEL"
 echo "###########USE_UPSERT########: $USE_UPSERT"
+echo "###########USE_ENVOY########: $USE_ENVOY"
+echo "###########ENVOY_PER_TRY_TIMEOUT########: $ENVOY_PER_TRY_TIMEOUT"
+echo "###########ENVOY_CONNECT_TIMEOUT########: $ENVOY_CONNECT_TIMEOUT"
+echo "###########ENVOY_FILE_NAME########: $ENVOY_FILE_NAME"
 
 # The index of the record to start at during the Load
 insertstart=$((YCSB_RECORD_COUNT * (MACHINE_INDEX - 1)))
@@ -127,7 +131,23 @@ cp ./converting_log_to_csv.py ./$ycsb_folder_name
 cp ./chaos/*.sh ./$ycsb_folder_name
 cp ./chaos/*.ps1 ./$ycsb_folder_name
 
+# Adding envoy files
+if [[ $USE_ENVOY == true ]]; then
+  echo "########## Generating envoy config files ##########"
+  ./envoy/generate-envoy-config.sh $COSMOS_URI $ENVOY_CONNECT_TIMEOUT $ENVOY_PER_TRY_TIMEOUT 3
+  ./envoy/generate-envoy-cert.sh
+  echo "########## Adding envoy files ##########"
+  cp ./envoy/envoy-final.yaml ./$ycsb_folder_name
+  cp ./envoy/server.crt ./$ycsb_folder_name
+  cp ./envoy/server.key ./$ycsb_folder_name
+fi
+
 cd ./$ycsb_folder_name
+
+if [[ $USE_ENVOY == true ]]; then
+  echo "########## Launching envoy ##########"
+  envoy -c ./envoy-final.yaml --log-level debug --log-path ./debug.txt > ./envoy_output.log 2>&1
+fi
 
 if [[ $DB_BINDING_NAME == "azurecosmos" ]]; then
   tool_api="ycsb_sql"
