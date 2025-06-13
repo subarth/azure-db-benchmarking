@@ -144,7 +144,7 @@ if [[ $USE_ENVOY == true ]]; then
   sudo ./generate-envoy-config.sh $COSMOS_URI $ENVOY_CONNECT_TIMEOUT $ENVOY_PER_TRY_TIMEOUT 3
   sudo ./generate-envoy-cert.sh
   echo "########## Launching envoy ##########"
-  sudo envoy -c ./envoy-final.yaml --log-level debug --log-path ~/envoy_debug.out > ~/envoy_output.log 2>&1
+  sudo envoy -c ./envoy-final.yaml --log-level debug --log-path ~/envoy_debug.out > ~/envoy_output.log 2>&1 &
   echo "########## Envoy launched ##########"
 fi
 
