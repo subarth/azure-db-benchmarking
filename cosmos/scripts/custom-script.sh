@@ -133,20 +133,19 @@ cp ./chaos/*.ps1 ./$ycsb_folder_name
 
 # Adding envoy files
 if [[ $USE_ENVOY == true ]]; then
-  echo "########## Generating envoy config files ##########"
-  ./envoy/generate-envoy-config.sh $COSMOS_URI $ENVOY_CONNECT_TIMEOUT $ENVOY_PER_TRY_TIMEOUT 3
-  ./envoy/generate-envoy-cert.sh
-  echo "########## Adding envoy files ##########"
-  cp ./envoy/envoy-final.yaml ./$ycsb_folder_name
-  cp ./envoy/server.crt ./$ycsb_folder_name
-  cp ./envoy/server.key ./$ycsb_folder_name
+  sudo chmod +x ./envoy/*.sh
+  cp -r ./envoy/* ./$ycsb_folder_name
 fi
 
 cd ./$ycsb_folder_name
 
 if [[ $USE_ENVOY == true ]]; then
+  echo "########## Generating envoy config files ##########"
+  sudo ./generate-envoy-config.sh $COSMOS_URI $ENVOY_CONNECT_TIMEOUT $ENVOY_PER_TRY_TIMEOUT 3
+  sudo ./generate-envoy-cert.sh
   echo "########## Launching envoy ##########"
-  envoy -c ./envoy-final.yaml --log-level debug --log-path ./debug.txt > ./envoy_output.log 2>&1
+  sudo envoy -c ./envoy-final.yaml --log-level debug --log-path ~/envoy_debug.out > ~/envoy_output.log 2>&1
+  echo "########## Envoy launched ##########"
 fi
 
 if [[ $DB_BINDING_NAME == "azurecosmos" ]]; then

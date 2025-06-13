@@ -18,6 +18,8 @@ runcmd:
   - sudo apt-get update
   - sudo apt-get install -y powershell
   - sudo apt install net-tools
+  - sudo mkdir /etc/apt/keyrings/
+  - wget -O- https://apt.envoyproxy.io/signing.key | sudo gpg --dearmor -o /etc/apt/keyrings/envoy-keyring.gpg
   - sudo apt-get update
   - sudo apt-get install envoy
   - sudo apt-get update
