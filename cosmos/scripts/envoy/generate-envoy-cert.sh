@@ -9,7 +9,9 @@ CERT_FILE="server.crt"
 KEY_FILE="server.key"
 
 # Java truststore path (default)
-JAVA_CACERTS="${JAVA_HOME}/lib/security/cacerts"
+JAVA_CACERTS1="/usr/lib/jvm/default-java/lib/security/cacerts"
+JAVA_CACERTS2="/usr/lib/jvm/java-11-openjdk-amd64/lib/security/cacerts"
+JAVA_CACERTS3="/usr/lib/jvm/java-1.11.0-openjdk-amd64/lib/security/cacerts"
 ALIAS="localhostcert"
 PASSWORD="changeit"
 
@@ -23,26 +25,30 @@ openssl req -x509 -nodes -days 365 \
 chmod 777 "${CERT_FILE}" "${KEY_FILE}"
 echo "✅ Certificate and key created with 777 permissions."
 
-echo "🔐 Importing cert into Java truststore at: ${JAVA_CACERTS}"
-keytool -import -trustcacerts \
-  -keystore "${JAVA_CACERTS}" \
+echo "🔐 Importing cert into Java truststore at: ${JAVA_CACERTS1}"
+sudo keytool -import -trustcacerts \
+  -keystore "${JAVA_CACERTS1}" \
   -storepass "${PASSWORD}" \
   -noprompt \
   -alias "${ALIAS}" \
   -file "${CERT_FILE}"
 
-# Optional: import to hardcoded Java location (adjust if needed)
-# ALT_CACERTS="/c/Program Files/Java/jdk-21/lib/security/cacerts"
-# if [[ -f "${ALT_CACERTS}" ]]; then
-#   echo "🔐 Also importing to alternate truststore at: ${ALT_CACERTS}"
-#   keytool -import -trustcacerts \
-#     -keystore "${ALT_CACERTS}" \
-#     -storepass "${PASSWORD}" \
-#     -noprompt \
-#     -alias "${ALIAS}" \
-#     -file "${CERT_FILE}"
-# else
-#   echo "⚠️  Alternate truststore path not found: ${ALT_CACERTS}"
-# fi
+echo "🔐 Importing cert into Java truststore at: ${JAVA_CACERTS2}"
+
+sudo keytool -import -trustcacerts \
+  -keystore "${JAVA_CACERTS2}" \
+  -storepass "${PASSWORD}" \
+  -noprompt \
+  -alias "${ALIAS}" \
+  -file "${CERT_FILE}"
+
+echo "🔐 Importing cert into Java truststore at: ${JAVA_CACERTS3}"
+
+sudo keytool -import -trustcacerts \
+  -keystore "${JAVA_CACERTS3}" \
+  -storepass "${PASSWORD}" \
+  -noprompt \
+  -alias "${ALIAS}" \
+  -file "${CERT_FILE}"
 
 echo "✅ Done."
