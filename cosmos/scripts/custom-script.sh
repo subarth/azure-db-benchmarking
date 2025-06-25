@@ -144,7 +144,8 @@ if [[ $USE_ENVOY == true ]]; then
   sudo ./generate-envoy-config.sh $COSMOS_URI $ENVOY_CONNECT_TIMEOUT $ENVOY_PER_TRY_TIMEOUT 3
   sudo ./generate-envoy-cert.sh
   echo "########## Launching envoy ##########"
-  sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > $user_home/envoy_output.log 2>&1 &
+  #sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > $user_home/envoy_output.log 2>&1 &
+  sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out &
   echo "########## Envoy launched ##########"
 fi
 
@@ -323,9 +324,9 @@ if [ -f "$user_home/envoy_debug.out" ]; then
   sudo mv "$user_home/envoy_debug.out" "/tmp/$VM_NAME-system-diagnostics"
 fi
 
-if [ -f "$user_home/envoy_output.log" ]; then
-  sudo mv "$user_home/envoy_output.log" "/tmp/$VM_NAME-system-diagnostics"
-fi
+# if [ -f "$user_home/envoy_output.log" ]; then
+#   sudo mv "$user_home/envoy_output.log" "/tmp/$VM_NAME-system-diagnostics"
+# fi
 
 if [ -f "$user_home/chaos.out" ] || [ -f "$user_home/chaos.err" ]; then
   sudo cp "$user_home/chaos.out" "$user_home/chaos.err" "/tmp/$VM_NAME-system-diagnostics"
