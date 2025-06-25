@@ -145,7 +145,7 @@ if [[ $USE_ENVOY == true ]]; then
   sudo ./generate-envoy-cert.sh
   echo "########## Launching envoy ##########"
   #sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > $user_home/envoy_output.log 2>&1 &
-  sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out &
+  sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > /dev/null 2>&1 &
   echo "########## Envoy launched ##########"
 fi
 
