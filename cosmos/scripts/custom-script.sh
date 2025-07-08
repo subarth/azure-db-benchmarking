@@ -254,11 +254,6 @@ sudo rm -f /tmp/ycsb.log
 # If python sdk is used, run that workload instead of ycsb test
 if [[ $USE_PYTHON_SDK == true ]]; then
   echo "########## Running Python SDK workload ##########"
-  # Starting chaos script if opt in
-  if [ "$fault" = true ]; then
-    databaseid="ycsb" containerid="usertable" endpoint=$COSMOS_URI masterkey=$COSMOS_KEY wait_for_fault_to_start_in_sec=$WAIT_FOR_FAULT_TO_START_IN_SEC duration_of_fault_in_sec=$DURATION_OF_FAULT_IN_SEC drop_probability=$DROP_PROBABILITY fault_region=$FAULT_REGION delay_in_ms=$DELAY_IN_MS bash chaos_script.sh >"/home/${ADMIN_USER_NAME}/chaos.out" 2>"/home/${ADMIN_USER_NAME}/chaos.err" &
-  fi
-
   pyworkload="READ"
   if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
     pyworkload="WRITE"
