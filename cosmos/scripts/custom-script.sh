@@ -56,6 +56,7 @@ echo "###########USE_ENVOY########: $USE_ENVOY"
 echo "###########ENVOY_PER_TRY_TIMEOUT########: $ENVOY_PER_TRY_TIMEOUT"
 echo "###########ENVOY_CONNECT_TIMEOUT########: $ENVOY_CONNECT_TIMEOUT"
 echo "###########ENVOY_FILE_NAME########: $ENVOY_FILE_NAME"
+echo "###########USE_PYTHON_SDK########: $USE_PYTHON_SDK"
 
 # The index of the record to start at during the Load
 insertstart=$((YCSB_RECORD_COUNT * (MACHINE_INDEX - 1)))
@@ -130,6 +131,12 @@ cp ./converting_log_to_csv.py ./$ycsb_folder_name
 # Adding chaos scripts
 cp ./chaos/*.sh ./$ycsb_folder_name
 cp ./chaos/*.ps1 ./$ycsb_folder_name
+
+if [[ $USE_PYTHON_SDK == true ]]; then
+  echo "########## Using Python SDK for Cosmos DB ##########"
+  cp ./pythonCosmosClient/* ./$ycsb_folder_name
+  sudo pip3 install -r ./$ycsb_folder_name/requirements.txt
+fi
 
 # Adding envoy files
 if [[ $USE_ENVOY == true ]]; then
@@ -244,64 +251,84 @@ job_start_time=$(date -d "$job_start_time" +'%s')
 # Clearing log file from last run if applicable
 sudo rm -f /tmp/ycsb.log
 
-#Execute YCSB test
-if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
-  now=$(date +"%s")
-  wait_interval=$(($job_start_time - $now))
-  if [ $wait_interval -gt 0 ] && [ $VM_COUNT -gt 1 ]; then
-    echo "Sleeping for $wait_interval second to sync with other clients"
-    sleep $wait_interval
-  else
-    echo "Not sleeping on clients sync time $job_start_time as it already past"
-  fi
-  ## Records count for write only ops which start with items count created by previous(machine_index -1) client machine
-  recordcountForWriteOps=$((YCSB_OPERATION_COUNT * MACHINE_INDEX))
-
+# If python sdk is used, run that workload instead of ycsb test
+if [[ $USE_PYTHON_SDK == true ]]; then
+  echo "########## Running Python SDK workload ##########"
   # Starting chaos script if opt in
   if [ "$fault" = true ]; then
     databaseid="ycsb" containerid="usertable" endpoint=$COSMOS_URI masterkey=$COSMOS_KEY wait_for_fault_to_start_in_sec=$WAIT_FOR_FAULT_TO_START_IN_SEC duration_of_fault_in_sec=$DURATION_OF_FAULT_IN_SEC drop_probability=$DROP_PROBABILITY fault_region=$FAULT_REGION delay_in_ms=$DELAY_IN_MS bash chaos_script.sh >"/home/${ADMIN_USER_NAME}/chaos.out" 2>"/home/${ADMIN_USER_NAME}/chaos.err" &
   fi
 
-  ## Execute run phase for YCSB tests with write only workload
-  echo "########## Run operation with write only workload for YCSB tests ###########"
-  uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="run" insertproportion=1 readproportion=0 updateproportion=0 scanproportion=0 recordcount=$recordcountForWriteOps operationcount=$YCSB_OPERATION_COUNT threads=$THREAD_COUNT target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
+  pyworkload="READ"
+  if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
+    pyworkload="WRITE"
+  fi
+  python3 CosmosClient.py --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
+  # rename metrics_log.csv to metrics_log.csv
+  if [ -f metrics_log.csv ]; then
+    mv metrics_log.csv "$VM_NAME-metrics_log.csv"
+  fi
+  sudo azcopy copy "$VM_NAME-metrics_log.csv" "$result_storage_url"
 else
-  if [ "$SKIP_LOAD_PHASE" = False ] || [ "$SKIP_LOAD_PHASE" = false ]; then
-    ## Execute load operation for YCSB tests
-    echo "########## Load operation for YCSB tests ###########"
-    ## Reducing the load phase RPS by decreasing the number of YCSB threads to eliminate throttling. The Throughput used for transaction phase is generally lesser than that is required for load phase resulting in throttling.
-    loadthreadcount=$((THREAD_COUNT / 5))
-    if [ $loadthreadcount -eq 0 ]; then
-      loadthreadcount=1
+  #Execute YCSB test
+  if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
+    now=$(date +"%s")
+    wait_interval=$(($job_start_time - $now))
+    if [ $wait_interval -gt 0 ] && [ $VM_COUNT -gt 1 ]; then
+      echo "Sleeping for $wait_interval second to sync with other clients"
+      sleep $wait_interval
+    else
+      echo "Not sleeping on clients sync time $job_start_time as it already past"
     fi
-    echo "##########loadthreadcount###########: $loadthreadcount"
-    uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="load" recordcount=$recordcount insertstart=$insertstart insertcount=$YCSB_RECORD_COUNT threads=$loadthreadcount target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR core_workload_insertion_retry_limit=5 userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
-  fi
-  now=$(date +"%s")
-  wait_interval=$(($job_start_time - $now))
-  if [ $wait_interval -gt 0 ] && [ $VM_COUNT -gt 1 ]; then
-    echo "Sleeping for $wait_interval second to sync with other clients"
-    sleep $wait_interval
-  else
-    echo "Not sleeping on clients sync time $job_start_time as it already past"
-  fi
-  sudo rm -f "$user_home/$VM_NAME-ycsb-load.log"
-  cp /tmp/ycsb.log $user_home/"$VM_NAME-ycsb-load.log"
-  sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.log" "$result_storage_url"
-  # Clearing log file from above load operation
-  sudo rm -f /tmp/ycsb.log
-  sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.1.log" "$result_storage_url"
-  # Starting chaos script if opt in
-  if [ "$fault" = true ]; then
-    databaseid="ycsb" containerid="usertable" endpoint=$COSMOS_URI masterkey=$COSMOS_KEY wait_for_fault_to_start_in_sec=$WAIT_FOR_FAULT_TO_START_IN_SEC duration_of_fault_in_sec=$DURATION_OF_FAULT_IN_SEC drop_probability=$DROP_PROBABILITY fault_region=$FAULT_REGION delay_in_ms=$DELAY_IN_MS bash chaos_script.sh >"/home/${ADMIN_USER_NAME}/chaos.out" 2>"/home/${ADMIN_USER_NAME}/chaos.err" &
-    sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.2.log" "$result_storage_url"
-  fi
+    ## Records count for write only ops which start with items count created by previous(machine_index -1) client machine
+    recordcountForWriteOps=$((YCSB_OPERATION_COUNT * MACHINE_INDEX))
 
-  ## Execute run phase for YCSB tests
-  echo "########## Run operation for YCSB tests ###########"
-  sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.3.log" "$result_storage_url"
-  uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="run" recordcount=$totalrecordcount operationcount=$YCSB_OPERATION_COUNT threads=$THREAD_COUNT target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT insertproportion=$INSERT_PROPORTION readproportion=$READ_PROPORTION updateproportion=$UPDATE_PROPORTION scanproportion=$SCAN_PROPORTION useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
-  sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.4.log" "$result_storage_url"
+    # Starting chaos script if opt in
+    if [ "$fault" = true ]; then
+      databaseid="ycsb" containerid="usertable" endpoint=$COSMOS_URI masterkey=$COSMOS_KEY wait_for_fault_to_start_in_sec=$WAIT_FOR_FAULT_TO_START_IN_SEC duration_of_fault_in_sec=$DURATION_OF_FAULT_IN_SEC drop_probability=$DROP_PROBABILITY fault_region=$FAULT_REGION delay_in_ms=$DELAY_IN_MS bash chaos_script.sh >"/home/${ADMIN_USER_NAME}/chaos.out" 2>"/home/${ADMIN_USER_NAME}/chaos.err" &
+    fi
+
+    ## Execute run phase for YCSB tests with write only workload
+    echo "########## Run operation with write only workload for YCSB tests ###########"
+    uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="run" insertproportion=1 readproportion=0 updateproportion=0 scanproportion=0 recordcount=$recordcountForWriteOps operationcount=$YCSB_OPERATION_COUNT threads=$THREAD_COUNT target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
+  else
+    if [ "$SKIP_LOAD_PHASE" = False ] || [ "$SKIP_LOAD_PHASE" = false ]; then
+      ## Execute load operation for YCSB tests
+      echo "########## Load operation for YCSB tests ###########"
+      ## Reducing the load phase RPS by decreasing the number of YCSB threads to eliminate throttling. The Throughput used for transaction phase is generally lesser than that is required for load phase resulting in throttling.
+      loadthreadcount=$((THREAD_COUNT / 5))
+      if [ $loadthreadcount -eq 0 ]; then
+        loadthreadcount=1
+      fi
+      echo "##########loadthreadcount###########: $loadthreadcount"
+      uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="load" recordcount=$recordcount insertstart=$insertstart insertcount=$YCSB_RECORD_COUNT threads=$loadthreadcount target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR core_workload_insertion_retry_limit=5 userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
+    fi
+    now=$(date +"%s")
+    wait_interval=$(($job_start_time - $now))
+    if [ $wait_interval -gt 0 ] && [ $VM_COUNT -gt 1 ]; then
+      echo "Sleeping for $wait_interval second to sync with other clients"
+      sleep $wait_interval
+    else
+      echo "Not sleeping on clients sync time $job_start_time as it already past"
+    fi
+    sudo rm -f "$user_home/$VM_NAME-ycsb-load.log"
+    cp /tmp/ycsb.log $user_home/"$VM_NAME-ycsb-load.log"
+    sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.log" "$result_storage_url"
+    # Clearing log file from above load operation
+    sudo rm -f /tmp/ycsb.log
+    sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.1.log" "$result_storage_url"
+    # Starting chaos script if opt in
+    if [ "$fault" = true ]; then
+      databaseid="ycsb" containerid="usertable" endpoint=$COSMOS_URI masterkey=$COSMOS_KEY wait_for_fault_to_start_in_sec=$WAIT_FOR_FAULT_TO_START_IN_SEC duration_of_fault_in_sec=$DURATION_OF_FAULT_IN_SEC drop_probability=$DROP_PROBABILITY fault_region=$FAULT_REGION delay_in_ms=$DELAY_IN_MS bash chaos_script.sh >"/home/${ADMIN_USER_NAME}/chaos.out" 2>"/home/${ADMIN_USER_NAME}/chaos.err" &
+      sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.2.log" "$result_storage_url"
+    fi
+
+    ## Execute run phase for YCSB tests
+    echo "########## Run operation for YCSB tests ###########"
+    sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.3.log" "$result_storage_url"
+    uri=$COSMOS_URI primaryKey=$COSMOS_KEY workload_type=$WORKLOAD_TYPE ycsb_operation="run" recordcount=$totalrecordcount operationcount=$YCSB_OPERATION_COUNT threads=$THREAD_COUNT target=$TARGET_OPERATIONS_PER_SECOND useUpsert=$USE_UPSERT insertproportion=$INSERT_PROPORTION readproportion=$READ_PROPORTION updateproportion=$UPDATE_PROPORTION scanproportion=$SCAN_PROPORTION useGateway=$USE_GATEWAY diagnosticsLatencyThresholdInMS=$DIAGNOSTICS_LATENCY_THRESHOLD_IN_MS requestdistribution=$REQUEST_DISTRIBUTION insertorder=$INSERT_ORDER includeExceptionStackInLog=$INCLUDE_EXCEPTION_STACK fieldcount=$FIELD_COUNT appInsightConnectionString=$APP_INSIGHT_CONN_STR userAgent=$USER_AGENT preferredRegionList=$PREFERRED_REGION_LIST consistencyLevel=$CONSISTENCY_LEVEL bash $DB_BINDING_NAME-run.sh
+    sudo azcopy copy $user_home/"$VM_NAME-ycsb-load.4.log" "$result_storage_url"
+  fi
 fi
 
 #Copy YCSB log to storage account

@@ -3,7 +3,7 @@ import asyncio
 import random
 import time
 
-from azure.cosmos import PartitionKey, exceptions
+from azure.cosmos import PartitionKey, ConsistencyLevel
 from azure.cosmos.aio import CosmosClient, DatabaseProxy
 
 from AsyncAtomicInt import AsyncAtomicInt
@@ -26,6 +26,21 @@ async def init_container(client: CosmosClient, database_name, container_name):
         offer_throughput=400
     )
     return container
+
+def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> CosmosClient:
+    cosmos_endpoint = "https://localhost:5100" if (use_envoy == True) else endpoint
+    return CosmosClient(
+        url=cosmos_endpoint,
+        credential=account_key,
+        enable_endpoint_discovery=(not use_envoy),
+        #transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
+        logging_enable=False,
+        consistency_level=ConsistencyLevel.Session,
+        connection_timeout=5,
+        enable_diagnostics_logging=True,
+        # retry_throttle_total=2,
+        retry_total=3,
+    )
 
 async def write_workload(container, metrics: Metrics, ops, rate_limit=None):
     interval = 1 / rate_limit if rate_limit else 0
@@ -109,7 +124,7 @@ async def read_workload(container, metrics: Metrics, ops, num_docs_loaded: int, 
                 await asyncio.sleep(to_sleep)
 
 async def main(args):
-    async with CosmosClient(args.endpoint, args.key) as client:
+    async with get_cosmos_client(args.endpoint, args.key, args.use_envoy) as client:
         container = await init_container(client, args.database, args.container)
 
         print(f"{'Type':<6} | {'Ops/sec':>6} | {'Avail':>6} | {'P99':>6} | {'P99.9':>7} | {'P99.99':>8}")
@@ -174,6 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("--target_ops_per_sec", type=int, default=0, help="Target operations/sec (0 = unthrottled)")
     parser.add_argument("--workload_type", type=str, default="READ", help="Workload type (read / write)")
     parser.add_argument("--read_document_count", type=int, default=10000, help="Total documents inserted for read operations")
+    parser.add_argument("--use_envoy", type=bool, default=False, help="Use Envoy Proxy for connecting to Cosmos DB")
     args = parser.parse_args()
 
     asyncio.run(main(args))
