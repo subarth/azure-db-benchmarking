@@ -1,10 +1,6 @@
 import asyncio
 import time
 from datetime import datetime, timezone
-import pandas as pd
-import matplotlib.pyplot as plt
-from openpyxl import load_workbook
-from openpyxl.drawing.image import Image as XLImage
 import csv
 
 REPORT_INTERVAL = 10  # seconds
@@ -69,60 +65,60 @@ class Metrics:
     @staticmethod
     def generate_summary_artifacts(csv_file: str):
         print("Generating summary artifacts")
-        try:
-            df = pd.read_csv(csv_file, parse_dates=["timestamp"])
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-            df["timestamp"] = df["timestamp"].dt.tz_localize(None)
-
-            # Plot Ops/sec Chart
-            plt.figure(figsize=(10, 6))
-            for op in df["operation"].unique():
-                subset = df[df["operation"] == op]
-                plt.plot(subset["timestamp"], subset["ops_per_sec"], label=f"{op} Ops/sec")
-            plt.title("Cosmos DB Ops/sec Over Time")
-            plt.xlabel("Time")
-            plt.ylabel("Ops/sec")
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig(CHART_FILENAME)
-            plt.close()
-
-            # Plot Latency Percentiles Chart
-            plt.figure(figsize=(10, 6))
-            for op in df["operation"].unique():
-                subset = df[df["operation"] == op]
-                plt.plot(subset["timestamp"], subset["p99 (us)"], label=f"{op} P99")
-                plt.plot(subset["timestamp"], subset["p99_9 (us)"], label=f"{op} P99.9", linestyle="--")
-                plt.plot(subset["timestamp"], subset["p99_99 (us)"], label=f"{op} P99.99", linestyle=":")
-            plt.title("Cosmos DB Latency Percentiles Over Time")
-            plt.xlabel("Time")
-            plt.ylabel("Latency (µs)")
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig(LATENCY_CHART_FILENAME)
-            plt.close()
-
-            # Excel Summary
-            with pd.ExcelWriter(EXCEL_FILENAME, engine="openpyxl") as writer:
-                df.to_excel(writer, sheet_name="RawData", index=False)
-
-            wb = load_workbook(EXCEL_FILENAME)
-
-            ws_chart1 = wb.create_sheet("OpsChart")
-            chart1 = XLImage(CHART_FILENAME)
-            chart1.anchor = "A1"
-            ws_chart1.add_image(chart1)
-
-            ws_chart2 = wb.create_sheet("LatencyChart")
-            chart2 = XLImage(LATENCY_CHART_FILENAME)
-            chart2.anchor = "A1"
-            ws_chart2.add_image(chart2)
-
-            wb.save(EXCEL_FILENAME)
-            print("✅ Charts saved: metrics_chart.png, latency_chart.png")
-            print(f"✅ Excel summary saved: {EXCEL_FILENAME}")
-        except Exception as e:
-            print(f"❌ Unexpected error: {e}")
+        # try:
+        #     df = pd.read_csv(csv_file, parse_dates=["timestamp"])
+        #     df["timestamp"] = pd.to_datetime(df["timestamp"])
+        #     df["timestamp"] = df["timestamp"].dt.tz_localize(None)
+        #
+        #     # Plot Ops/sec Chart
+        #     plt.figure(figsize=(10, 6))
+        #     for op in df["operation"].unique():
+        #         subset = df[df["operation"] == op]
+        #         plt.plot(subset["timestamp"], subset["ops_per_sec"], label=f"{op} Ops/sec")
+        #     plt.title("Cosmos DB Ops/sec Over Time")
+        #     plt.xlabel("Time")
+        #     plt.ylabel("Ops/sec")
+        #     plt.legend()
+        #     plt.tight_layout()
+        #     plt.savefig(CHART_FILENAME)
+        #     plt.close()
+        #
+        #     # Plot Latency Percentiles Chart
+        #     plt.figure(figsize=(10, 6))
+        #     for op in df["operation"].unique():
+        #         subset = df[df["operation"] == op]
+        #         plt.plot(subset["timestamp"], subset["p99 (us)"], label=f"{op} P99")
+        #         plt.plot(subset["timestamp"], subset["p99_9 (us)"], label=f"{op} P99.9", linestyle="--")
+        #         plt.plot(subset["timestamp"], subset["p99_99 (us)"], label=f"{op} P99.99", linestyle=":")
+        #     plt.title("Cosmos DB Latency Percentiles Over Time")
+        #     plt.xlabel("Time")
+        #     plt.ylabel("Latency (µs)")
+        #     plt.legend()
+        #     plt.tight_layout()
+        #     plt.savefig(LATENCY_CHART_FILENAME)
+        #     plt.close()
+        #
+        #     # Excel Summary
+        #     with pd.ExcelWriter(EXCEL_FILENAME, engine="openpyxl") as writer:
+        #         df.to_excel(writer, sheet_name="RawData", index=False)
+        #
+        #     wb = load_workbook(EXCEL_FILENAME)
+        #
+        #     ws_chart1 = wb.create_sheet("OpsChart")
+        #     chart1 = XLImage(CHART_FILENAME)
+        #     chart1.anchor = "A1"
+        #     ws_chart1.add_image(chart1)
+        #
+        #     ws_chart2 = wb.create_sheet("LatencyChart")
+        #     chart2 = XLImage(LATENCY_CHART_FILENAME)
+        #     chart2.anchor = "A1"
+        #     ws_chart2.add_image(chart2)
+        #
+        #     wb.save(EXCEL_FILENAME)
+        #     print("✅ Charts saved: metrics_chart.png, latency_chart.png")
+        #     print(f"✅ Excel summary saved: {EXCEL_FILENAME}")
+        # except Exception as e:
+        #     print(f"❌ Unexpected error: {e}")
 
     @staticmethod
     async def print_and_log_metrics(start_time, metric, append_logs=False):

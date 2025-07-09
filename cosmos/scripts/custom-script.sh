@@ -134,6 +134,7 @@ cp ./chaos/*.ps1 ./$ycsb_folder_name
 
 if [[ $USE_PYTHON_SDK == true ]]; then
   echo "########## Using Python SDK for Cosmos DB ##########"
+  sudo apt-get install python3-pip
   cp ./pythonCosmosClient/* ./$ycsb_folder_name
   sudo pip3 install -r ./$ycsb_folder_name/requirements.txt
 fi
@@ -258,6 +259,7 @@ if [[ $USE_PYTHON_SDK == true ]]; then
   if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
     pyworkload="WRITE"
   fi
+  echo "python3 CosmosClient.py --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
   python3 CosmosClient.py --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
   # rename metrics_log.csv to metrics_log.csv
   if [ -f metrics_log.csv ]; then
