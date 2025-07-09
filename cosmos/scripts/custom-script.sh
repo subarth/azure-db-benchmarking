@@ -347,6 +347,10 @@ sudo mkdir "/tmp/$VM_NAME-system-diagnostics"
 sudo mv /tmp/cosmos_client_logs "/tmp/$VM_NAME-system-diagnostics"
 sudo cp "$user_home/agent.out" "$user_home/agent.err" "/tmp/$VM_NAME-system-diagnostics"
 
+if [ -f "$user_home/python_cosmos.log" ]; then
+  sudo mv "$user_home/python_cosmos.log" "/tmp/$VM_NAME-system-diagnostics"
+fi
+
 if [ -f "$user_home/envoy_debug.out" ]; then
   sudo mv "$user_home/envoy_debug.out" "/tmp/$VM_NAME-system-diagnostics"
 fi
