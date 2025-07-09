@@ -128,13 +128,16 @@ cp ./*.properties ./$ycsb_folder_name
 cp ./aggregate_multiple_file_results.py ./$ycsb_folder_name
 cp ./converting_log_to_csv.py ./$ycsb_folder_name
 
+cp ./run_python_workload.sh ./$ycsb_folder_name
+sudo chmod +x ./$ycsb_folder_name/run_python_workload.sh
+
 # Adding chaos scripts
 cp ./chaos/*.sh ./$ycsb_folder_name
 cp ./chaos/*.ps1 ./$ycsb_folder_name
 
 if [[ $USE_PYTHON_SDK == true ]]; then
   echo "########## Using Python SDK for Cosmos DB ##########"
-  sudo apt-get install python3-pip
+  sudo apt-get install python3-pip --yes
   cp ./pythonCosmosClient/* ./$ycsb_folder_name
   sudo pip3 install -r ./$ycsb_folder_name/requirements.txt
 fi
@@ -259,8 +262,9 @@ if [[ $USE_PYTHON_SDK == true ]]; then
   if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
     pyworkload="WRITE"
   fi
-  echo "python3 CosmosClient.py --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
-  python3 CosmosClient.py --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
+  echo "python3 CosmosClient.py -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
+  endpoint=$COSMOS_URI database="ycsb" container="usertable" key=$COSMOS_KEY workload_type=$pyworkload read_document_count=$totalrecordcount ops=$YCSB_OPERATION_COUNT concurrency=$THREAD_COUNT target_ops_per_sec=$TARGET_OPERATIONS_PER_SECOND use_envoy=$USE_ENVOY run_python_workload.sh
+  #python3 CosmosClient.py -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
   # rename metrics_log.csv to metrics_log.csv
   if [ -f metrics_log.csv ]; then
     mv metrics_log.csv "$VM_NAME-metrics_log.csv"
