@@ -5,9 +5,7 @@ PROJECT_DIR="/tmp/ycsb/ycsb-azurecosmos-binding-0.18.0-SNAPSHOT"
 VENV_DIR="$PROJECT_DIR/venv"
 PYTHON_SCRIPT="$PROJECT_DIR/CosmosClient.py"
 REQUIREMENTS_FILE="$PROJECT_DIR/requirements.txt"
-LOG_FILE="$PROJECT_DIR/python_cosmos.log"
-
-PYTHON_ARGS="$@"
+LOG_FILE="/home/${ADMIN_USER_NAME}/python_cosmos.log"
 
 # === FUNCTIONS ===
 create_venv_if_needed() {
@@ -51,14 +49,16 @@ launch_script() {
   echo "🚀 Launching $PYTHON_SCRIPT in background using venv..."
 
   source "$VENV_DIR/bin/activate"
-  sudo $(which python3) "$PYTHON_SCRIPT" $PYTHON_ARGS > "$LOG_FILE" 2>&1 &
+  echo "$(which python3) $PYTHON_SCRIPT -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
+  sudo $(which python3) "$PYTHON_SCRIPT" -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY > "$LOG_FILE" 2>&1
+  python3 CosmosClient.py -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
   PID=$!
   echo "✅ Script launched with PID $PID. Logging to $LOG_FILE"
 }
 
 # === EXECUTION ===
-set -x
+#set -x
 create_venv_if_needed
 install_requirements
 launch_script
-set +x
+#set +x

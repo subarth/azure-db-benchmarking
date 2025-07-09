@@ -262,8 +262,7 @@ if [[ $USE_PYTHON_SDK == true ]]; then
   if [ "$WRITE_ONLY_OPERATION" = True ] || [ "$WRITE_ONLY_OPERATION" = true ]; then
     pyworkload="WRITE"
   fi
-  echo "python3 CosmosClient.py -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
-  endpoint=$COSMOS_URI database="ycsb" container="usertable" key=$COSMOS_KEY workload_type=$pyworkload read_document_count=$totalrecordcount ops=$YCSB_OPERATION_COUNT concurrency=$THREAD_COUNT target_ops_per_sec=$TARGET_OPERATIONS_PER_SECOND use_envoy=$USE_ENVOY run_python_workload.sh
+  ADMIN_USER_NAME=$ADMIN_USER_NAME endpoint=$COSMOS_URI database="ycsb" container="usertable" key=$COSMOS_KEY workload_type=$pyworkload read_document_count=$totalrecordcount ops=$YCSB_OPERATION_COUNT concurrency=$THREAD_COUNT target_ops_per_sec=$TARGET_OPERATIONS_PER_SECOND use_envoy=$USE_ENVOY bash run_python_workload.sh
   #python3 CosmosClient.py -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $pyworkload --read_document_count $totalrecordcount --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY
   # rename metrics_log.csv to metrics_log.csv
   if [ -f metrics_log.csv ]; then
