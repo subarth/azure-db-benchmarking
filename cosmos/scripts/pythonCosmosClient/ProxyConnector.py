@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 
 class ProxiedTCPConnector(aiohttp.TCPConnector):
     """
@@ -15,7 +16,7 @@ class ProxiedTCPConnector(aiohttp.TCPConnector):
         proxy_port: int,
         label: str | None = "aiohttp",
         tags: list[str] | None = None,
-        **kwargs: Any,
+        **kwargs,
     ) -> None:
         """
         Initialize the ProxiedTCPConnector.
@@ -27,7 +28,7 @@ class ProxiedTCPConnector(aiohttp.TCPConnector):
             tags (list[str] | None): Additional tags to include in metrics. Defaults to None.
             **kwargs: Additional keyword arguments passed to the base TrackedTCPConnector.
         """
-        super().__init__(label=label, tags=tags, **kwargs)
+        super().__init__(**kwargs)
         self.__proxy_host = proxy_host
         self.__proxy_port = proxy_port
 

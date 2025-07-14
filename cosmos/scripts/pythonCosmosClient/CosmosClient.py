@@ -6,6 +6,7 @@ import time
 
 from azure.cosmos import PartitionKey, ConsistencyLevel
 from azure.cosmos.aio import CosmosClient, DatabaseProxy
+from azure.core.pipeline.transport import AioHttpTransport
 
 from ProxyConnector import ProxiedTCPConnector
 from AsyncAtomicInt import AsyncAtomicInt
@@ -19,7 +20,6 @@ CHART_FILENAME = "metrics_chart.png"
 LATENCY_CHART_FILENAME = "latency_chart.png"
 EXCEL_FILENAME = "metrics_summary.xlsx"
 
-
 async def init_container(client: CosmosClient, database_name, container_name):
     db: DatabaseProxy = await client.create_database_if_not_exists(database_name)
     container = await db.create_container_if_not_exists(
@@ -30,16 +30,25 @@ async def init_container(client: CosmosClient, database_name, container_name):
     return container
 
 def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> CosmosClient:
-    proxied_connector = ProxiedTCPConnector(proxy_host="localhost", proxy_port=5001)
+    proxied_connector = ProxiedTCPConnector(proxy_host="localhost", proxy_port=5100, keepalive_timeout=30)
     session = aiohttp.ClientSession(
         connector=proxied_connector,
     )
-    cosmos_endpoint = "https://localhost:5100" if (use_envoy == True) else endpoint
+    cosmos_endpoint = endpoint #"https://localhost:5100" if (use_envoy == True) else endpoint
     return CosmosClient(
         url=cosmos_endpoint,
         credential=account_key,
-        enable_endpoint_discovery=(not use_envoy),
         transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
+        logging_enable=False,
+        consistency_level=ConsistencyLevel.Session,
+        connection_timeout=5,
+        enable_diagnostics_logging=True,
+        # retry_throttle_total=2,
+        retry_total=3,
+    ) if (use_envoy == True) else CosmosClient(
+        url=cosmos_endpoint,
+        credential=account_key,
+        #transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
         logging_enable=False,
         consistency_level=ConsistencyLevel.Session,
         connection_timeout=5,

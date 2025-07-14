@@ -11,7 +11,7 @@ if ! command -v envoy &> /dev/null; then
     echo "Envoy installed successfully."
 fi
 
-TEMPLATE="./templates/envoy_config_hostrewrite.yaml"
+TEMPLATE="./templates/envoy_config_hostrewrite_2.yaml"
 OUTPUT="envoy-final.yaml"
 
 FULL_URL="$1"
