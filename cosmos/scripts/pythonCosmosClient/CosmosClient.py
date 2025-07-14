@@ -1,3 +1,4 @@
+import aiohttp
 import argparse
 import asyncio
 import random
@@ -6,6 +7,7 @@ import time
 from azure.cosmos import PartitionKey, ConsistencyLevel
 from azure.cosmos.aio import CosmosClient, DatabaseProxy
 
+from ProxyConnector import ProxiedTCPConnector
 from AsyncAtomicInt import AsyncAtomicInt
 from datetime import datetime
 from Metrics import Metrics
@@ -28,12 +30,16 @@ async def init_container(client: CosmosClient, database_name, container_name):
     return container
 
 def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> CosmosClient:
+    proxied_connector = ProxiedTCPConnector(proxy_host="localhost", proxy_port=5001)
+    session = aiohttp.ClientSession(
+        connector=proxied_connector,
+    )
     cosmos_endpoint = "https://localhost:5100" if (use_envoy == True) else endpoint
     return CosmosClient(
         url=cosmos_endpoint,
         credential=account_key,
         enable_endpoint_discovery=(not use_envoy),
-        #transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
+        transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
         logging_enable=False,
         consistency_level=ConsistencyLevel.Session,
         connection_timeout=5,
