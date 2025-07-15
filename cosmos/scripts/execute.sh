@@ -13,6 +13,9 @@ if [[ ! $PROJECT_NAME =~ ^[a-zA-Z0-9]+$ ]]; then
     exit 1
 fi
 
+sudo add-apt-repository ppa:deadsnakes/ppa --yes
+sudo apt install python3.13
+
 # check to enforce only once instance of the workload is running. 
 if pgrep -xf "bash custom-script.sh"
 then
