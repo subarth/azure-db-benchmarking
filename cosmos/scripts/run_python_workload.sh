@@ -9,10 +9,10 @@ LOG_FILE="/home/${ADMIN_USER_NAME}/python_cosmos.log"
 
 # === FUNCTIONS ===
 create_venv_if_needed() {
-  sudo apt install python3.8-venv --yes
+  sudo apt install python3.13-venv --yes
   if [ ! -d "$VENV_DIR" ]; then
     echo "📦 Virtual environment not found. Creating at $VENV_DIR..."
-    sudo python3 -m venv "$VENV_DIR"
+    sudo python3.13 -m venv "$VENV_DIR"
     if [ $? -ne 0 ]; then
       echo "❌ Failed to create virtual environment."
       exit 1
@@ -28,8 +28,8 @@ install_requirements() {
   if [ -f "$REQUIREMENTS_FILE" ]; then
     echo "📚 Installing dependencies from $REQUIREMENTS_FILE..."
     source "$VENV_DIR/bin/activate"
-    sudo $(which pip3) install --upgrade pip
-    sudo $(which pip3) install -r "$REQUIREMENTS_FILE"
+    sudo $(which pip3.13) install --upgrade pip
+    sudo $(which pip3.13) install -r "$REQUIREMENTS_FILE"
     if [ $? -ne 0 ]; then
       echo "❌ Failed to install requirements."
       exit 1
@@ -49,13 +49,24 @@ launch_script() {
   echo "🚀 Launching $PYTHON_SCRIPT in background using venv..."
 
   source "$VENV_DIR/bin/activate"
-  echo "$(which python3) $PYTHON_SCRIPT -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
-  sudo $(which python3) "$PYTHON_SCRIPT" --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY > "$LOG_FILE" 2>&1
+  echo "$(which python3.13) $PYTHON_SCRIPT -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
+  sudo $(which python3.13) "$PYTHON_SCRIPT" --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY > "$LOG_FILE" 2>&1
   echo "✅ Script launched. Logging to $LOG_FILE"
+}
+
+install_py3_13() {
+  sudo add-apt-repository ppa:deadsnakes/ppa --yes
+  sudo apt install python3.13 --yes
+  if [ $? -ne 0 ]; then
+    echo "❌ Failed to install Python 3.13."
+    exit 1
+  fi
+  echo "✅ Python 3.13 installed."
 }
 
 # === EXECUTION ===
 #set -x
+install_py3_13
 create_venv_if_needed
 install_requirements
 launch_script
