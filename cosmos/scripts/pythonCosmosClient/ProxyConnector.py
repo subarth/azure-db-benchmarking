@@ -14,8 +14,6 @@ class ProxiedTCPConnector(aiohttp.TCPConnector):
         *,
         proxy_host: str,
         proxy_port: int,
-        label: str | None = "aiohttp",
-        tags: list[str] | None = None,
         **kwargs,
     ) -> None:
         """

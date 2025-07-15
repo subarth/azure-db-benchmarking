@@ -50,16 +50,16 @@ static_resources:
         address: 0.0.0.0
         port_value: 5100
     filter_chains:
-    - transport_socket:
-        name: envoy.transport_sockets.tls
-        typed_config:
-          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
-          common_tls_context:
-            tls_certificates:
-              - certificate_chain:
-                  filename: "/mnt/c/temp/envoy/server.crt"
-                private_key:
-                  filename: "/mnt/c/temp/envoy/server.key"
+    # - transport_socket:
+    #     name: envoy.transport_sockets.tls
+    #     typed_config:
+    #       "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+    #       common_tls_context:
+    #         tls_certificates:
+    #           - certificate_chain:
+    #               filename: "/mnt/c/temp/envoy/server.crt"
+    #             private_key:
+    #               filename: "/mnt/c/temp/envoy/server.key"
       filters:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
@@ -119,7 +119,7 @@ static_resources:
           common_http_protocol_options:
             max_connection_duration: 900s
           drain_timeout: 330s
-          stream_idle_timeout: 30s
+          stream_idle_timeout: 60s
           route_config:
             name: local_route
             response_headers_to_add:
@@ -141,40 +141,34 @@ static_resources:
               #     - upgrade_type: CONNECT
               - match:
                   prefix: "/"
+                  # headers:
+                  #   - name: ":authority"
+                  #     string_match:
+                  #       safe_regex:
+                  #         regex: '.*aakpandey-stage-nosql.*'
                 route:
-                  host_rewrite_literal: "aakpandey-stage-nosql.documents-staging.windows-ppe.net" # remove this line to use the original host
+                  # host_rewrite_literal: "aakpandey-stage-nosql.documents-staging.windows-ppe.net" # remove this line to use the original host
                   cluster: aakpandey-stage-nosql
                   timeout: 300s
                   retry_policy:
                     retry_on: "connect-failure,refused-stream,reset"
                     per_try_timeout: 300s
                     num_retries: 3
-            # - name: local_aakpandey-stage-nosql-eastus2
-            #   domains:
-            #   - "aakpandey-stage-nosql-eastus2.documents-staging.windows-ppe.net"
-            #   routes:
-              # - match:
-              #     connect_matcher: {}
-              #       # authority:
-              #       #   suffix: "aakpandey-stage-nosql-eastus2.documents-staging.windows-ppe.net:443"
-              #   route:
-              #     cluster: connect_cluster
-              #     timeout: 300s
-              #     retry_policy:
-              #       retry_on: "connect-failure,refused-stream,reset"
-              #       per_try_timeout: 300s
-              #       num_retries: 3          
-              #     upgrade_configs:
-              #     - upgrade_type: CONNECT
               # - match:
               #     prefix: "/"
+              #     headers:
+              #       - name: ":authority"
+              #         string_match:
+              #           safe_regex:
+              #             regex: '.*aakpandey-stage-nosql\.*'
               #   route:
-              #     cluster: aakpandey-stage-nosql-eastus2
+              #     host_rewrite_literal: "{{ENDPOINT_REGIONAL}}" # remove this line to use the original host
+              #     cluster: aakpandey-stage-nosql
               #     timeout: 300s
               #     retry_policy:
               #       retry_on: "connect-failure,refused-stream,reset"
               #       per_try_timeout: 300s
-              #       num_retries: 3          
+              #       num_retries: 3        
             - name: local_heise            
               domains:
               - www.heise.de
@@ -187,71 +181,43 @@ static_resources:
                   retry_policy:
                     retry_on: "connect-failure,refused-stream,reset"
                     per_try_timeout: 300s
-                    num_retries: 3        
+                    num_retries: 3
           http_filters:
+          - name: envoy.filters.http.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                name: dynamic_forward_proxy_cache_config
+                dns_lookup_family: V4_ONLY
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
-  # - name: connect_cluster
-  #   connect_timeout: 10s
-  #   type: ORIGINAL_DST
-  #   lb_policy: CLUSTER_PROVIDED
-  #   # cluster_type:
-  #   #   name: envoy.clusters.original_dst
-  #   #   typed_config:
-  #   #     "@type": type.googleapis.com/envoy.extensions.clusters.original_dst.v3.OriginalDstCluster
-  # - name: aakpandey-stage-nosql-eastus2
-  #   type: STRICT_DNS
-  #   lb_policy: LEAST_REQUEST
-  #   dns_lookup_family: V4_ONLY
-  #   connect_timeout: 5s
-  #   load_assignment:
-  #     cluster_name: aakpandey-stage-nosql-eastus2
-  #     endpoints:
-  #     - lb_endpoints:
-  #       - endpoint:
-  #           address:
-  #             socket_address:
-  #               protocol: TCP
-  #               address: aakpandey-stage-nosql-eastus2.documents-staging.windows-ppe.net
-  #               port_value: 443
-  #   circuit_breakers:
-  #     thresholds:
-  #       priority: DEFAULT
-  #       max_connections: 10000
-  #       max_pending_requests: 10000
-  #       max_requests: 10000
-  #       retry_budget:
-  #         budget_percent:
-  #           value: 10.0
-  #         min_retry_concurrency: 10
-  #       track_remaining: true
-  #   typed_extension_protocol_options:
-  #     envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-  #       "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-  #       common_http_protocol_options:
-  #         max_connection_duration: 120s
-  #       upstream_http_protocol_options:
-  #         auto_sni: true
-  #         auto_san_validation: true
-  #       auto_config:
-  #         http2_protocol_options:
-  #           max_concurrent_streams: 3
-  #           initial_stream_window_size: 1048576
-  #   transport_socket:
-  #     name: envoy.transport_sockets.tls # required to communicate in HTTPS
-  #     typed_config:
-  #       "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-  #       common_tls_context:
-  #         alpn_protocols: ["http/1.1"]
-  #         validation_context:
-  #           trust_chain_verification: ACCEPT_UNTRUSTED
   - name: aakpandey-stage-nosql
-    type: STRICT_DNS
-    lb_policy: LEAST_REQUEST
+    lb_policy: CLUSTER_PROVIDED
+    cluster_type:
+      name: envoy.clusters.dynamic_forward_proxy
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+        sub_clusters_config:
+          lb_policy: LEAST_REQUEST
+    transport_socket:
+      name: envoy.transport_sockets.tls # required to communicate in HTTPS
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          alpn_protocols: ["h2"]
+          tls_params:
+            tls_minimum_protocol_version: TLSv1_3
+            tls_maximum_protocol_version: TLSv1_3
+            ecdh_curves:
+              - "P-384"
+              - "P-256"
+          validation_context:
+            trust_chain_verification: ACCEPT_UNTRUSTED
     dns_lookup_family: V4_ONLY
-    connect_timeout: 5s
+    dns_refresh_rate: 30s
+    connect_timeout: 10s
     load_assignment:
       cluster_name: aakpandey-stage-nosql
       endpoints:
@@ -283,16 +249,11 @@ static_resources:
           auto_san_validation: true
         auto_config:
           http2_protocol_options:
-            max_concurrent_streams: 3
+            max_concurrent_streams: 100
             initial_stream_window_size: 1048576
-    transport_socket:
-      name: envoy.transport_sockets.tls # required to communicate in HTTPS
-      typed_config:
-        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        common_tls_context:
-          alpn_protocols: ["http/1.1"]
-          validation_context:
-            trust_chain_verification: ACCEPT_UNTRUSTED  
+            connection_keepalive:
+              interval: 60s
+              timeout: 20s  
   - name: heise
     type: STRICT_DNS
     dns_lookup_family: V4_ONLY

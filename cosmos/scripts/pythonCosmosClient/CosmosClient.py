@@ -8,6 +8,7 @@ from azure.cosmos import PartitionKey, ConsistencyLevel
 from azure.cosmos.aio import CosmosClient, DatabaseProxy
 from azure.core.pipeline.transport import AioHttpTransport
 
+from datetime import datetime, timezone
 from ProxyConnector import ProxiedTCPConnector
 from AsyncAtomicInt import AsyncAtomicInt
 from datetime import datetime
@@ -29,13 +30,13 @@ async def init_container(client: CosmosClient, database_name, container_name):
     )
     return container
 
-def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> CosmosClient:
+def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> (CosmosClient, aiohttp.ClientSession, ProxiedTCPConnector):
     proxied_connector = ProxiedTCPConnector(proxy_host="localhost", proxy_port=5100, keepalive_timeout=30)
     session = aiohttp.ClientSession(
         connector=proxied_connector,
     )
     cosmos_endpoint = endpoint #"https://localhost:5100" if (use_envoy == True) else endpoint
-    return CosmosClient(
+    return (CosmosClient(
         url=cosmos_endpoint,
         credential=account_key,
         transport=AioHttpTransport(session=session, session_owner=False),  # type: ignore
@@ -55,7 +56,7 @@ def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> Cosmo
         enable_diagnostics_logging=True,
         # retry_throttle_total=2,
         retry_total=3,
-    )
+    ), session, proxied_connector)
 
 async def write_workload(container, metrics: Metrics, ops, rate_limit=None):
     interval = 1 / rate_limit if rate_limit else 0
@@ -64,7 +65,7 @@ async def write_workload(container, metrics: Metrics, ops, rate_limit=None):
         timehash = datetime.now().strftime("%Y%m%d%H%M%S.%f")
         doc = {"id": f"user{(random.randint(1, 1_000_000))}{timehash}", "value": random.random()}
         try:
-            await container.upsert_item(doc)
+            await container.create_item(doc)
             latency = (time.perf_counter_ns() - start) / 1_000
             await metrics.record(latency, True)
         except Exception as e:
@@ -74,7 +75,7 @@ async def write_workload(container, metrics: Metrics, ops, rate_limit=None):
 
         if interval:
             elapsed = time.perf_counter_ns() - start
-            to_sleep = (interval - elapsed)  / 1_000_000_000
+            to_sleep = (interval * 1_000_000_000 - elapsed)  / 1_000_000_000
             if to_sleep > 0:
                 await asyncio.sleep(to_sleep)
 
@@ -134,12 +135,13 @@ async def read_workload(container, metrics: Metrics, ops, num_docs_loaded: int, 
 
         if interval:
             elapsed = time.perf_counter_ns() - start
-            to_sleep = interval - elapsed
+            to_sleep = (interval * 1_000_000_000 - elapsed) / 1_000_000_000
             if to_sleep > 0:
                 await asyncio.sleep(to_sleep)
 
 async def main(args):
-    async with get_cosmos_client(args.endpoint, args.key, args.use_envoy) as client:
+    client, session, connector = get_cosmos_client(args.endpoint, args.key, args.use_envoy)
+    async with client:
         container = await init_container(client, args.database, args.container)
 
         print(f"{'Type':<6} | {'Ops/sec':>6} | {'Avail':>6} | {'P99':>6} | {'P99.9':>7} | {'P99.99':>8}")
@@ -190,7 +192,10 @@ async def main(args):
             exit(1)
 
         #Metrics.generate_summary_artifacts(CSV_FILENAME)
-        print("✅ Benchmark complete. Results saved.")
+        print(f"✅ Benchmark complete. Results saved. {datetime.now(timezone.utc).isoformat()}")
+
+    await session.close()
+    await connector.close()
 
 
 if __name__ == "__main__":
