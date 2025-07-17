@@ -1,3 +1,5 @@
+import uuid
+
 import aiohttp
 import asyncio
 
@@ -42,6 +44,11 @@ class ProxiedTCPConnector(aiohttp.TCPConnector):
         req.url = (
             req.url.with_host(self.__proxy_host).with_port(self.__proxy_port).with_scheme("http")
         )
+
+        # inject the client id header.
+        if "x-ms-client-id" not in req.headers:
+            req.headers["x-ms-client-id"] = str(uuid.uuid4())
+
         return await super()._create_direct_connection(
             req,
             traces,

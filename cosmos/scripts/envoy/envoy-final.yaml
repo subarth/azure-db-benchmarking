@@ -77,6 +77,7 @@ static_resources:
                     downstream_transport_failure_reason: "%DOWNSTREAM_TRANSPORT_FAILURE_REASON%"
                     duration: "%DURATION%"
                     protocol: "%PROTOCOL%"
+                    client_id: "%REQ(X-MS-CLIENT-ID)%"
                     req_authority: "%REQ(:AUTHORITY)%"
                     req_duration: "%REQUEST_DURATION%"
                     req_line: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)% %REQ(:SCHEME)%://%REQ(:AUTHORITY)%%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%"

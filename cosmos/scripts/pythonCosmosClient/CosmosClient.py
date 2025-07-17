@@ -30,8 +30,13 @@ async def init_container(client: CosmosClient, database_name, container_name):
     )
     return container
 
-def get_cosmos_client(endpoint: str, account_key: str, use_envoy: bool) -> (CosmosClient, aiohttp.ClientSession, ProxiedTCPConnector):
-    proxied_connector = ProxiedTCPConnector(proxy_host="localhost", proxy_port=5100, keepalive_timeout=30)
+def get_cosmos_client(endpoint: str,
+                      account_key: str,
+                      use_envoy: bool,
+                      proxy_host: str) -> (CosmosClient, aiohttp.ClientSession, ProxiedTCPConnector):
+    envoy_host="localhost" if (proxy_host is None) or (proxy_host == "") else proxy_host
+    print(f"Initializing a proxy connector with proxy_host={envoy_host} and proxy_port={5100}")
+    proxied_connector = ProxiedTCPConnector(proxy_host= envoy_host, proxy_port=5100, keepalive_timeout=30)
     session = aiohttp.ClientSession(
         connector=proxied_connector,
     )
@@ -140,7 +145,7 @@ async def read_workload(container, metrics: Metrics, ops, num_docs_loaded: int, 
                 await asyncio.sleep(to_sleep)
 
 async def main(args):
-    client, session, connector = get_cosmos_client(args.endpoint, args.key, args.use_envoy)
+    client, session, connector = get_cosmos_client(args.endpoint, args.key, args.use_envoy, args.proxy_host)
     async with client:
         container = await init_container(client, args.database, args.container)
 
@@ -210,6 +215,7 @@ if __name__ == "__main__":
     parser.add_argument("--workload_type", type=str, default="READ", help="Workload type (read / write)")
     parser.add_argument("--read_document_count", type=int, default=10000, help="Total documents inserted for read operations")
     parser.add_argument("--use_envoy", type=bool, default=False, help="Use Envoy Proxy for connecting to Cosmos DB")
+    parser.add_argument("--proxy_host", type=str, help="Proxy endpoint URL")
     args = parser.parse_args()
 
     asyncio.run(main(args))
