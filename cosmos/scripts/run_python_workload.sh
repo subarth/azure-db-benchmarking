@@ -49,8 +49,8 @@ launch_script() {
   echo "🚀 Launching $PYTHON_SCRIPT in background using venv..."
 
   source "$VENV_DIR/bin/activate"
-  echo "$(which python3.13) $PYTHON_SCRIPT -u --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY"
-  sudo $(which python3.13) "$PYTHON_SCRIPT" --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY > "$LOG_FILE" 2>&1
+  echo "$(which python3.13) -u $PYTHON_SCRIPT --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY --proxy_host $PROXY_DNS_NAME"
+  sudo $(which python3.13) "$PYTHON_SCRIPT" --endpoint $COSMOS_URI --database "ycsb" --container "usertable" --key $COSMOS_KEY --workload_type $workload_type --read_document_count $read_document_count --ops $YCSB_OPERATION_COUNT --concurrency $THREAD_COUNT --target_ops_per_sec $TARGET_OPERATIONS_PER_SECOND --use_envoy $USE_ENVOY --proxy_host $PROXY_DNS_NAME > "$LOG_FILE" 2>&1
   echo "✅ Script launched. Logging to $LOG_FILE"
 }
 

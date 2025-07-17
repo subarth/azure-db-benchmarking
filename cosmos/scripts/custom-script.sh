@@ -57,6 +57,7 @@ echo "###########ENVOY_PER_TRY_TIMEOUT########: $ENVOY_PER_TRY_TIMEOUT"
 echo "###########ENVOY_CONNECT_TIMEOUT########: $ENVOY_CONNECT_TIMEOUT"
 echo "###########ENVOY_FILE_NAME########: $ENVOY_FILE_NAME"
 echo "###########USE_PYTHON_SDK########: $USE_PYTHON_SDK"
+echo "###########PROXY_DNS_NAME########: $PROXY_DNS_NAME"
 
 # The index of the record to start at during the Load
 insertstart=$((YCSB_RECORD_COUNT * (MACHINE_INDEX - 1)))
@@ -158,6 +159,14 @@ if [[ $USE_ENVOY == true ]]; then
   #sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > $user_home/envoy_output.log 2>&1 &
   sudo envoy -c ./envoy-final.yaml --log-level error --log-path $user_home/envoy_debug.out > /dev/null 2>&1 &
   echo "########## Envoy launched ##########"
+
+  echo "########## Waiting for envoy to start ##########"
+  timeout 60m bash -c 'until nc -z "$0" 5100; do echo "Waiting for envoy..."; sleep 2; done' "$PROXY_DNS_NAME"
+  if [ $? -ne 0 ]; then
+    echo "Envoy at $PROXY_DNS_NAME did not start within the timeout period."
+    exit 1
+  fi
+  echo "########## Envoy is up and running ##########"
 fi
 
 if [[ $DB_BINDING_NAME == "azurecosmos" ]]; then
