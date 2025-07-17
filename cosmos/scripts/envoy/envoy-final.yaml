@@ -57,9 +57,9 @@ static_resources:
     #       common_tls_context:
     #         tls_certificates:
     #           - certificate_chain:
-    #               filename: "/mnt/c/temp/envoy/server.crt"
+    #               filename: "./server.crt"
     #             private_key:
-    #               filename: "/mnt/c/temp/envoy/server.key"
+    #               filename: "./server.key"
       filters:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
@@ -77,7 +77,6 @@ static_resources:
                     downstream_transport_failure_reason: "%DOWNSTREAM_TRANSPORT_FAILURE_REASON%"
                     duration: "%DURATION%"
                     protocol: "%PROTOCOL%"
-                    client_id: "%REQ(X-MS-CLIENT-ID)%"
                     req_authority: "%REQ(:AUTHORITY)%"
                     req_duration: "%REQUEST_DURATION%"
                     req_line: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)% %REQ(:SCHEME)%://%REQ(:AUTHORITY)%%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%"
@@ -146,7 +145,7 @@ static_resources:
                   #   - name: ":authority"
                   #     string_match:
                   #       safe_regex:
-                  #         regex: '.*aakpandey-stage-nosql.*'
+                  #         regex: '.*aakpandey-stage-nosql\.*'
                 route:
                   # host_rewrite_literal: "aakpandey-stage-nosql.documents-staging.windows-ppe.net" # remove this line to use the original host
                   cluster: aakpandey-stage-nosql
@@ -219,16 +218,6 @@ static_resources:
     dns_lookup_family: V4_ONLY
     dns_refresh_rate: 30s
     connect_timeout: 10s
-    load_assignment:
-      cluster_name: aakpandey-stage-nosql
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                protocol: TCP
-                address: aakpandey-stage-nosql.documents-staging.windows-ppe.net
-                port_value: 443
     circuit_breakers:
       thresholds:
         priority: DEFAULT

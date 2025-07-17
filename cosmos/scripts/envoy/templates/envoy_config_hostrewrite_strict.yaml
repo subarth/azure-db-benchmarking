@@ -194,13 +194,14 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
   - name: {{ACCOUNT_NAME}}
-    lb_policy: CLUSTER_PROVIDED
-    cluster_type:
-      name: envoy.clusters.dynamic_forward_proxy
-      typed_config:
-        "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
-        sub_clusters_config:
-          lb_policy: LEAST_REQUEST
+    type: STRICT_DNS
+    # lb_policy: CLUSTER_PROVIDED
+    # cluster_type:
+    #   name: envoy.clusters.dynamic_forward_proxy
+    #   typed_config:
+    #     "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+    #     sub_clusters_config:
+    #       lb_policy: LEAST_REQUEST
     transport_socket:
       name: envoy.transport_sockets.tls # required to communicate in HTTPS
       typed_config:
@@ -218,6 +219,16 @@ static_resources:
     dns_lookup_family: V4_ONLY
     dns_refresh_rate: 30s
     connect_timeout: 10s
+    load_assignment:
+      cluster_name: {{ACCOUNT_NAME}}
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                protocol: TCP
+                address: {{ENDPOINT}}
+                port_value: 443
     circuit_breakers:
       thresholds:
         priority: DEFAULT
