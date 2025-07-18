@@ -227,7 +227,7 @@ static_resources:
             address:
               socket_address:
                 protocol: TCP
-                address: "https://{{ACCOUNT_NAME}}-eastus2euap.documents.azure.com"
+                address: "{{ACCOUNT_NAME}}-eastus2euap.documents.azure.com"
                 port_value: 443
     circuit_breakers:
       thresholds:
