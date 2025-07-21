@@ -198,7 +198,11 @@ static_resources:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
         "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
         common_http_protocol_options:
-          max_connection_duration: 120s
+          # As of time of writing, we have habitat-envoy-namespaced, which receives low QPS.
+          # We have a limited number of CosmosDB accounts to connect to, so we can keep them all open
+          # and in-memory and make all requests fast.
+          max_connection_duration: 0s
+          idle_timeout: 180s
         upstream_http_protocol_options:
           auto_sni: true
           auto_san_validation: true
@@ -253,7 +257,11 @@ static_resources:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
         "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
         common_http_protocol_options:
-          max_connection_duration: 120s
+          # As of time of writing, we have habitat-envoy-namespaced, which receives low QPS.
+          # We have a limited number of CosmosDB accounts to connect to, so we can keep them all open
+          # and in-memory and make all requests fast.
+          max_connection_duration: 0s
+          idle_timeout: 180s
         upstream_http_protocol_options:
           auto_sni: true
           auto_san_validation: true
