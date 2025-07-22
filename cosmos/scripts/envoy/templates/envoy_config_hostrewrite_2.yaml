@@ -199,8 +199,9 @@ static_resources:
       name: envoy.clusters.dynamic_forward_proxy
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
-        sub_clusters_config:
-          lb_policy: LEAST_REQUEST
+        dns_cache_config:
+          name: dynamic_forward_proxy_cache_config
+          dns_lookup_family: V4_ONLY
     transport_socket:
       name: envoy.transport_sockets.tls # required to communicate in HTTPS
       typed_config:
