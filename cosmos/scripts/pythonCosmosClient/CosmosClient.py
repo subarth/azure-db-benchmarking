@@ -1,3 +1,5 @@
+import uuid
+
 import aiohttp
 import argparse
 import asyncio
@@ -68,7 +70,7 @@ async def write_workload(container, metrics: Metrics, ops, rate_limit=None):
     for _ in range(ops):
         start = time.perf_counter_ns()
         timehash = datetime.now().strftime("%Y%m%d%H%M%S.%f")
-        doc = {"id": f"user{(random.randint(1, 1_000_000))}{timehash}", "value": random.random()}
+        doc = {"id": f"user{(uuid.uuid4())}{timehash}", "value": random.random()}
         try:
             await container.create_item(doc)
             latency = (time.perf_counter_ns() - start) / 1_000
