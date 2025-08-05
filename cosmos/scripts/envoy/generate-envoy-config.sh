@@ -7,7 +7,7 @@ set -e
 # Ensure Envoy is installed
 if ! command -v envoy &> /dev/null; then
     echo "Envoy is not installed. Installing..."
-    sudo apt-get install envoy=1.31.0
+    sudo apt-get install envoy
     echo "Envoy installed successfully."
 fi
 
