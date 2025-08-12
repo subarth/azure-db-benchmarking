@@ -285,6 +285,9 @@
                     "cosmosKey": {
                         "value": "[parameters('cosmosKey')]"
                     },
+                    "databaseName": {
+                        "value": "[parameters('databaseName')]"
+                    },
                     "workloadType": {
                         "value": "[parameters('workloadType')]"
                     },
