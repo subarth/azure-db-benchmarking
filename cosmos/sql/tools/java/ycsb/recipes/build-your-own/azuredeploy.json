@@ -90,6 +90,12 @@
                 "description": "Specifies the key for the Cosmos DB account"
             }
         },
+        "databaseName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the name of the Cosmos DB database"
+            }
+        },
         "workloadType": {
             "type": "string",
             "defaultValue": "workloadc",
