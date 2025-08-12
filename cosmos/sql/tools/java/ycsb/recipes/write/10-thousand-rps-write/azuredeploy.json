@@ -34,6 +34,12 @@
                 "description": "Specifies the key for the Cosmos DB account"
             }
         },
+        "databaseName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specifies the name of the Cosmos DB database"
+            }
+        },
         "vmSize": {
             "type": "string",
             "defaultValue": "Standard_D8s_v4",

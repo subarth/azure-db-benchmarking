@@ -329,7 +329,7 @@
         "publicIPAddressName": "[concat(parameters('projectName'), '-ip')]",
         "networkInterfaceName": "[concat(parameters('projectName'), '-nic')]",
         "networkSecurityGroupName": "[concat(parameters('projectName'), '-nsg')]",
-        "benchmarkingToolsURL": "[ concat('https://github.com/iam-jay/',parameters('benchmarkingToolsRepoName'),'.git')]",
+        "benchmarkingToolsURL": "[ concat('https://github.com/',parameters('benchmarkingToolsRepoName'),'.git')]",
         "cloudInitScriptUrl": "[concat('https://raw.githubusercontent.com/',parameters('benchmarkingToolsRepoName'),'/',parameters('benchmarkingToolsBranchName'),'/system/cloud-init.txt')]",
         "vmScriptExtensionScriptUrl": "[concat('https://raw.githubusercontent.com/',parameters('benchmarkingToolsRepoName'),'/',parameters('benchmarkingToolsBranchName'),'/cosmos/scripts/execute.sh')]",
         "customScriptUrl": "[concat('https://raw.githubusercontent.com/',parameters('benchmarkingToolsRepoName'),'/',parameters('benchmarkingToolsBranchName'),'/cosmos/scripts/custom-script.sh')]",
