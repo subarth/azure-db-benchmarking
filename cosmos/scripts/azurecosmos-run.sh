@@ -79,7 +79,15 @@ if [ ! -z "$appInsightConnectionString" ]; then
 fi
 
 if [ ! -z "$databaseName" ]; then
-   sed -i "s/^[#]*\s*azurecosmos.$databaseName\ =.*/azurecosmos.databaseName\ =\ $databaseName/" azurecosmos.properties
+   echo "[azurecosmos-run] Provided databaseName=$databaseName"
+   # Replace existing line if present; otherwise append.
+   if grep -q '^[#]*\s*azurecosmos\.databaseName\s*=' azurecosmos.properties; then
+      sed -i "s/^[#]*\s*azurecosmos\.databaseName\s*=.*/azurecosmos.databaseName = $databaseName/" azurecosmos.properties
+   else
+      echo "azurecosmos.databaseName = $databaseName" >> azurecosmos.properties
+   fi
+   echo "[azurecosmos-run] Effective databaseName line:";
+   grep -E '^azurecosmos\.databaseName\s*=' azurecosmos.properties || echo "[azurecosmos-run] WARNING: databaseName not found after attempt to set"
 fi
 
 if [ ! -z "$useUpsert" ]; then
