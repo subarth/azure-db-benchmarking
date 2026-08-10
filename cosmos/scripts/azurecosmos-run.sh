@@ -56,6 +56,14 @@ if [ ! -z "$scanproportion" ]; then
    sed -i "s/^[#]*\s*scanproportion=.*/scanproportion=$scanproportion/" workloads/$workload
 fi
 
+if [ -n "$SCAN_LENGTH" ]; then
+   sed -i "s/^[#]*\s*scanlength=.*/scanlength=$SCAN_LENGTH/" workloads/"$workload"
+fi
+
+if [ -n "$MAX_SCAN_LENGTH" ]; then
+   sed -i "s/^[#]*\s*maxscanlength=.*/maxscanlength=$MAX_SCAN_LENGTH/" workloads/"$workload"
+fi
+
 if [ ! -z "$insertproportion" ]; then
    sed -i "s/^[#]*\s*insertproportion=.*/insertproportion=$insertproportion/" workloads/$workload
 fi
