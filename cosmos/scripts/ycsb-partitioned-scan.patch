@@ -50,11 +50,15 @@ index d9733ac..68a74d3 100644
  
        CosmosContainer container = AzureCosmosClient.containerCache.get(table);
        if (container == null) {
-@@ -440,9 +451,25 @@ public class AzureCosmosClient extends DB {
+@@ -440,9 +451,29 @@ public class AzureCosmosClient extends DB {
  
        List<SqlParameter> paramList = new ArrayList<>();
        paramList.add(new SqlParameter("@startkey", startkey));
 +      paramList.add(new SqlParameter("@partitionkey", partitionKey));
++      for (int fieldIndex = 0; fieldIndex < 10; fieldIndex++) {
++        int character = java.util.concurrent.ThreadLocalRandom.current().nextInt(32, 127);
++        paramList.add(new SqlParameter("@field" + fieldIndex + "Prefix", Character.toString((char) character)));
++      }
  
        SqlQuerySpec querySpec = new SqlQuerySpec(
 -          this.createSelectTop(fields, recordcount) + " FROM root r WHERE r.id >= @startkey", paramList);
@@ -63,21 +67,21 @@ index d9733ac..68a74d3 100644
 +              + " AND r.id >= @startkey"
 +              + " AND STARTSWITH(r.id1, 'user')"
 +              + " AND ("
-+              + "STARTSWITH(r.field0, '8')"
-+              + " OR STARTSWITH(r.field1, '-')"
-+              + " OR STARTSWITH(r.field2, '#')"
-+              + " OR STARTSWITH(r.field3, '4')"
-+              + " OR STARTSWITH(r.field4, '+')"
-+              + " OR STARTSWITH(r.field5, '3')"
-+              + " OR STARTSWITH(r.field6, ':')"
-+              + " OR STARTSWITH(r.field7, '*')"
-+              + " OR STARTSWITH(r.field8, '7')"
-+              + " OR STARTSWITH(r.field9, '=')"
++              + "STARTSWITH(r.field0, @field0Prefix)"
++              + " OR STARTSWITH(r.field1, @field1Prefix)"
++              + " OR STARTSWITH(r.field2, @field2Prefix)"
++              + " OR STARTSWITH(r.field3, @field3Prefix)"
++              + " OR STARTSWITH(r.field4, @field4Prefix)"
++              + " OR STARTSWITH(r.field5, @field5Prefix)"
++              + " OR STARTSWITH(r.field6, @field6Prefix)"
++              + " OR STARTSWITH(r.field7, @field7Prefix)"
++              + " OR STARTSWITH(r.field8, @field8Prefix)"
++              + " OR STARTSWITH(r.field9, @field9Prefix)"
 +              + ") ORDER BY r.id", paramList);
        CosmosPagedIterable<ObjectNode> pagedIterable = container.queryItems(querySpec, queryOptions, ObjectNode.class);
        Iterator<FeedResponse<ObjectNode>> pageIterator = pagedIterable
            .iterableByPage(AzureCosmosClient.preferredPageSize).iterator();
-@@ -508,7 +535,7 @@ public class AzureCosmosClient extends DB {
+@@ -508,7 +539,7 @@ public class AzureCosmosClient extends DB {
          cosmosPatchOperations.replace("/" + pair.getKey(), pair.getValue().toString());
        }
  
@@ -86,7 +90,7 @@ index d9733ac..68a74d3 100644
        CosmosItemResponse<ObjectNode> response = container.patchItem(key, pk, cosmosPatchOperations, ObjectNode.class);
        if (diagnosticsLatencyThresholdInMS > 0 &&
            response.getDiagnostics().getDuration().compareTo(Duration.ofMillis(diagnosticsLatencyThresholdInMS)) > 0) {
-@@ -558,10 +585,13 @@ public class AzureCosmosClient extends DB {
+@@ -558,10 +589,13 @@ public class AzureCosmosClient extends DB {
          container = AzureCosmosClient.database.getContainer(table);
          AzureCosmosClient.containerCache.put(table, container);
        }
@@ -101,7 +105,7 @@ index d9733ac..68a74d3 100644
  
        for (Map.Entry<String, ByteIterator> pair : values.entrySet()) {
          node.put(pair.getKey(), pair.getValue().toString());
-@@ -611,7 +641,7 @@ public class AzureCosmosClient extends DB {
+@@ -611,7 +645,7 @@ public class AzureCosmosClient extends DB {
          AzureCosmosClient.containerCache.put(table, container);
        }
        CosmosItemResponse<Object> response = container.deleteItem(key,
@@ -110,7 +114,7 @@ index d9733ac..68a74d3 100644
            new CosmosItemRequestOptions());
        if (diagnosticsLatencyThresholdInMS > 0 &&
            response.getDiagnostics().getDuration().compareTo(Duration.ofMillis(diagnosticsLatencyThresholdInMS)) > 0) {
-@@ -630,6 +660,10 @@ public class AzureCosmosClient extends DB {
+@@ -630,6 +664,10 @@ public class AzureCosmosClient extends DB {
      return Status.ERROR;
    }
  
