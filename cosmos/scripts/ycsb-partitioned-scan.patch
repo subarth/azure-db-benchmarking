@@ -62,7 +62,7 @@ index d9733ac..68a74d3 100644
  
        SqlQuerySpec querySpec = new SqlQuerySpec(
 -          this.createSelectTop(fields, recordcount) + " FROM root r WHERE r.id >= @startkey", paramList);
-+          this.createSelectTop(fields, 500)
++          this.createSelectTop(fields, 100)
 +              + " FROM root r WHERE r.pk = @partitionkey"
 +              + " AND r.id >= @startkey"
 +              + " AND STARTSWITH(r.id1, 'user')"
