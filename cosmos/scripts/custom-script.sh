@@ -108,6 +108,10 @@ git clone -b "$YCSB_GIT_BRANCH_NAME" --single-branch "$YCSB_GIT_REPO_URL"
 cd YCSB
 echo "########## Pulling Latest YCSB ##########"
 git pull
+sed -i '/Vector<HashMap<String, ByteIterator>> result) {/a\    LOGGER.info("SCAN startkey={} count={}", startkey, recordcount);' \
+  azurecosmos/src/main/java/site/ycsb/db/AzureCosmosClient.java
+grep -q 'LOGGER.info("SCAN startkey={} count={}", startkey, recordcount);' \
+  azurecosmos/src/main/java/site/ycsb/db/AzureCosmosClient.java || exit 1
 echo "########## Building YCSB ##########"
 mvn -pl site.ycsb:$DB_BINDING_NAME-binding -am clean package
 cp -r ./$DB_BINDING_NAME/target/ycsb-$DB_BINDING_NAME-binding*.tar.gz /tmp/ycsb
