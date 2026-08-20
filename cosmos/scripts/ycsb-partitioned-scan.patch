@@ -50,7 +50,7 @@ index d9733ac..68a74d3 100644
  
        CosmosContainer container = AzureCosmosClient.containerCache.get(table);
        if (container == null) {
-@@ -440,9 +451,13 @@ public class AzureCosmosClient extends DB {
+@@ -440,9 +451,25 @@ public class AzureCosmosClient extends DB {
  
        List<SqlParameter> paramList = new ArrayList<>();
        paramList.add(new SqlParameter("@startkey", startkey));
@@ -58,14 +58,26 @@ index d9733ac..68a74d3 100644
  
        SqlQuerySpec querySpec = new SqlQuerySpec(
 -          this.createSelectTop(fields, recordcount) + " FROM root r WHERE r.id >= @startkey", paramList);
-+          this.createSelectTop(fields, 5000)
++          this.createSelectTop(fields, 500)
 +              + " FROM root r WHERE r.pk = @partitionkey"
 +              + " AND r.id >= @startkey"
-+              + " AND STARTSWITH(r.id1, 'user') ORDER BY r.id", paramList);
++              + " AND STARTSWITH(r.id1, 'user')"
++              + " AND ("
++              + "STARTSWITH(r.field0, '8')"
++              + " OR STARTSWITH(r.field1, '-')"
++              + " OR STARTSWITH(r.field2, '#')"
++              + " OR STARTSWITH(r.field3, '4')"
++              + " OR STARTSWITH(r.field4, '+')"
++              + " OR STARTSWITH(r.field5, '3')"
++              + " OR STARTSWITH(r.field6, ':')"
++              + " OR STARTSWITH(r.field7, '*')"
++              + " OR STARTSWITH(r.field8, '7')"
++              + " OR STARTSWITH(r.field9, '=')"
++              + ") ORDER BY r.id", paramList);
        CosmosPagedIterable<ObjectNode> pagedIterable = container.queryItems(querySpec, queryOptions, ObjectNode.class);
        Iterator<FeedResponse<ObjectNode>> pageIterator = pagedIterable
            .iterableByPage(AzureCosmosClient.preferredPageSize).iterator();
-@@ -508,7 +523,7 @@ public class AzureCosmosClient extends DB {
+@@ -508,7 +535,7 @@ public class AzureCosmosClient extends DB {
          cosmosPatchOperations.replace("/" + pair.getKey(), pair.getValue().toString());
        }
  
@@ -74,7 +86,7 @@ index d9733ac..68a74d3 100644
        CosmosItemResponse<ObjectNode> response = container.patchItem(key, pk, cosmosPatchOperations, ObjectNode.class);
        if (diagnosticsLatencyThresholdInMS > 0 &&
            response.getDiagnostics().getDuration().compareTo(Duration.ofMillis(diagnosticsLatencyThresholdInMS)) > 0) {
-@@ -558,10 +573,13 @@ public class AzureCosmosClient extends DB {
+@@ -558,10 +585,13 @@ public class AzureCosmosClient extends DB {
          container = AzureCosmosClient.database.getContainer(table);
          AzureCosmosClient.containerCache.put(table, container);
        }
@@ -89,7 +101,7 @@ index d9733ac..68a74d3 100644
  
        for (Map.Entry<String, ByteIterator> pair : values.entrySet()) {
          node.put(pair.getKey(), pair.getValue().toString());
-@@ -611,7 +629,7 @@ public class AzureCosmosClient extends DB {
+@@ -611,7 +641,7 @@ public class AzureCosmosClient extends DB {
          AzureCosmosClient.containerCache.put(table, container);
        }
        CosmosItemResponse<Object> response = container.deleteItem(key,
@@ -98,7 +110,7 @@ index d9733ac..68a74d3 100644
            new CosmosItemRequestOptions());
        if (diagnosticsLatencyThresholdInMS > 0 &&
            response.getDiagnostics().getDuration().compareTo(Duration.ofMillis(diagnosticsLatencyThresholdInMS)) > 0) {
-@@ -630,6 +648,10 @@ public class AzureCosmosClient extends DB {
+@@ -630,6 +660,10 @@ public class AzureCosmosClient extends DB {
      return Status.ERROR;
    }
  
