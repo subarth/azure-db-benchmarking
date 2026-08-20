@@ -94,6 +94,10 @@ if [ ! -z "$useUpsert" ]; then
    sed -i "s/^[#]*\s*azurecosmos.useUpsert\ =.*/azurecosmos.useUpsert\ =\ $useUpsert/" azurecosmos.properties
 fi
 
+if [ ! -z "$partitionCount" ]; then
+   sed -i "$ aazurecosmos.partitionCount=$partitionCount" azurecosmos.properties
+fi
+
 if [ ! -z "$includeExceptionStackInLog" ]; then
    sed -i "s/^[#]*\s*azurecosmos.includeExceptionStackInLog\ =.*/azurecosmos.includeExceptionStackInLog\ =\ $includeExceptionStackInLog/" azurecosmos.properties
 fi
